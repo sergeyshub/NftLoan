@@ -44,6 +44,13 @@ describe("NFTLender", function () {
     await startLoanTx.wait();
   });
 
+  /*
+  it("Cancel the loan", async function () {
+    const cancelLoanTx = await nftLender.cancelLoan(0);
+    await cancelLoanTx.wait();
+  });
+  */
+
   it("Fund the loan", async function () {
     var amount = BigNumber.from("70000000000000000000");  // 70 USDC
 
