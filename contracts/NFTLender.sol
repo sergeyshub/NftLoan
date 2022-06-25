@@ -70,7 +70,7 @@ contract NFTLender {
      * @param    nftToken - NFT token to use as collateral
      * @param    nftTokenId - NFT token id
      * @param    price - NFT token price, as determined by the borrower multipled by 10**18
-     * @param    rate - annual percentage rate multipled by 10**18. Example 200000000000000000 is 20%
+     * @param    rate - annual percentage rate multipled by 10**18. Example: 200000000000000000 is 20%
      * @param    maturity - loan maturity time in seconds
      */
     function createLoan(ERC721 nftToken, uint256 nftTokenId, uint256 price, uint256 rate, uint256 maturity) public returns (uint256) {
