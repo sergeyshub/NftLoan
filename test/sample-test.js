@@ -31,12 +31,12 @@ describe("NFTLender", function () {
     await nftLender.deployed();
   });
 
-  it("Start a loan", async function () {
+  it("Create a new loan", async function () {
     await testNft.approve(nftLender.address, 0);
 
-    const startLoanTx = await nftLender.startLoan(
-      testNft.address, 
-      0,
+    const startLoanTx = await nftLender.createLoan(
+      testNft.address,                          // NTF token 
+      0,                                        // NFT token Id
       BigNumber.from("100000000000000000000"),  // 100 USDC
       BigNumber.from("200000000000000000"),     // 20%
       60 * 60 * 24 * 10);                       // 10 days
@@ -59,4 +59,13 @@ describe("NFTLender", function () {
     const repayLoanTx = await nftLender.repayLoan(0);
     await repayLoanTx.wait();
   });
+
+  /*
+  it("Liquidate the loan", async function () {
+    await usdc.approve(nftLender.address, ethers.constants.MaxUint256);
+
+    const liquidateLoanTx = await nftLender.liquidateLoan(0);
+    await liquidateLoanTx.wait();
+  });
+  */
 });
