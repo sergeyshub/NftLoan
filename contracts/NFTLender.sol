@@ -74,10 +74,6 @@ contract NFTLender {
      * @param    maturity - loan maturity time in seconds
      */
     function createLoan(ERC721 nftToken, uint256 nftTokenId, uint256 price, uint256 rate, uint256 maturity) public returns (uint256) {
-        console.log("startLoan, loanId: %d", loanNumber);
-        console.log("msg.sender: %s", msg.sender);
-        console.log("address(this): %s", address(this));
-
         require(price > 0, "The price cannot be negative");
         require(rate > 0, "The rate cannot be negative");
         require(maturity > 0, "The maturity cannot be negative");
@@ -110,10 +106,6 @@ contract NFTLender {
      * @param    loanId - loan Id
      */
     function cancelLoan(uint256 loanId) public {
-        console.log("repayLoan, loanId: %d", loanId);
-        console.log("msg.sender: %s", msg.sender);
-        console.log("status: %d", loans[loanId].status);
-
         require(loans[loanId].status == STATUS_NEW, "The specified loan cannot be canceled");
         require(msg.sender == loans[loanId].borrower, "This method can only be called by borrower");
 
@@ -131,10 +123,6 @@ contract NFTLender {
      * @param    amount - loan amount, must be greater than 0 and not greater than 70% of the NTF price
      */
     function fundLoan(uint256 loanId, uint256 amount) public {
-        console.log("fundLoan, loanId: %d", loanId);
-        console.log("msg.sender: %s", msg.sender);
-        console.log("status: %d", loans[loanId].status);
-
         require(loans[loanId].status == STATUS_NEW, "The specified loan cannot be funded");
         require(amount > 0, "The loan amount cannot be negative");
         require(amount <= (loans[loanId].price * MAX_RATIO) / 100, "The loan amount cannot exceed 70% of the NFT price");
@@ -153,11 +141,6 @@ contract NFTLender {
      * @param    loanId - loan Id
      */
     function repayLoan(uint256 loanId) public {
-        console.log("repayLoan, loanId: %d", loanId);
-        console.log("msg.sender: %s", msg.sender);
-        console.log("status: %d", loans[loanId].status);
-        console.log("now: %d", block.timestamp);
-
         require(loans[loanId].status == STATUS_FUNDED, "The specified loan cannot be repaid");
         require(msg.sender == loans[loanId].borrower, "This method can only be called by borrower");
 
@@ -181,11 +164,6 @@ contract NFTLender {
      * @param    loanId - loan Id
      */
     function liquidateLoan(uint256 loanId) public {
-        console.log("liquidateLoan, loanId: %d", loanId);
-        console.log("msg.sender: %s", msg.sender);
-        console.log("status: %d", loans[loanId].status);
-        console.log("now: %d", block.timestamp);
-
         require(loans[loanId].status == STATUS_FUNDED, "The specified loan cannot be liquidated");
 
         uint256 elapsedTime = block.timestamp - loans[loanId].timeFunded;
@@ -209,13 +187,9 @@ contract NFTLender {
      * @param    elapsedTime - elapsed time since loan funding in seconds
      */
     function _computeRepaymentAmount(uint256 loanId, uint256 elapsedTime) private view returns (uint256) {
-        console.log("elapsedTime: %d", elapsedTime);
-
         uint256 ratePerSecond = loans[loanId].rate / 31536000;
         uint256 accruedInterest = (loans[loanId].amount * elapsedTime * ratePerSecond) / 1000000000000000000;
         uint256 repaymentAmount = loans[loanId].amount + accruedInterest;
-
-        console.log("repaymentAmount: %d", repaymentAmount);
 
         return repaymentAmount;
     }
