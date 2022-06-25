@@ -3,7 +3,6 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "hardhat/console.sol";
 
 // @dev Loan data
 struct Loan {
@@ -61,7 +60,6 @@ contract NFTLender {
      * @param    _usdcToken - the token to use for loan payments (has to be USDC per assignment)
      */
     constructor(ERC20 _usdcToken) {
-        console.log("NFTLender constructor");
         usdcToken = _usdcToken;
     }
 
