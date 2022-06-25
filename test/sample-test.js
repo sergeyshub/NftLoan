@@ -1,5 +1,6 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
+const { BigNumber } = require("ethers");
 
 var nftLender;
 var usdc;
@@ -33,16 +34,29 @@ describe("NFTLender", function () {
   it("Start a loan", async function () {
     await testNft.approve(nftLender.address, 0);
 
-    const startLoanTx = await nftLender.startLoan(testNft.address, 0, 100000, 60 * 60 * 24 * 10);
+    const startLoanTx = await nftLender.startLoan(
+      testNft.address, 
+      0,
+      BigNumber.from("100000000000000000000"),  // 100 USDC
+      BigNumber.from("200000000000000000"),     // 20%
+      60 * 60 * 24 * 10);                       // 10 days
+
     await startLoanTx.wait();
   });
 
   it("Fund the loan", async function () {
-    var amount = 70000;
+    var amount = BigNumber.from("70000000000000000000");  // 70 USDC
 
-    await usdc.approve(nftLender.address, amount);
+    await usdc.approve(nftLender.address, ethers.constants.MaxUint256);
 
     const fundLoanTx = await nftLender.fundLoan(0, amount);
     await fundLoanTx.wait();
+  });
+
+  it("Repay the loan", async function () {
+    await usdc.approve(nftLender.address, ethers.constants.MaxUint256);
+
+    const repayLoanTx = await nftLender.repayLoan(0);
+    await repayLoanTx.wait();
   });
 });

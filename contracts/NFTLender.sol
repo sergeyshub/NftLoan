@@ -6,12 +6,15 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "hardhat/console.sol";
 
 struct Loan {
-    ERC721 ntfToken;
+    ERC721 nftToken;
     uint256 nftTokenId;
     uint256 price;
+    uint256 rate;
     uint256 amount;
     uint256 maturity;
     address borrower;
+    address lender;
+    uint256 timeFunded;
     uint8 status;
 }
 
@@ -32,18 +35,25 @@ contract NFTLender {
         usdcToken = _usdcToken;
     }
 
-    function startLoan(ERC721 ntfToken, uint256 nftTokenId, uint256 price, uint256 maturity) public {
+    function startLoan(ERC721 nftToken, uint256 nftTokenId, uint256 price, uint256 rate, uint256 maturity) public {
         console.log("startLoan, loanId: %d", loanNumber);
         console.log("msg.sender: %s", msg.sender);
         console.log("address(this): %s", address(this));
 
+        require(price > 0, "The price cannot be negative");
+        require(rate > 0, "The rate cannot be negative");
+        require(maturity > 0, "The maturity cannot be negative");
+
         Loan memory loan = Loan({
-            ntfToken: ntfToken,
+            nftToken: nftToken,
             nftTokenId: nftTokenId,
             price: price,
+            rate: rate,
             amount: 0,
             maturity: maturity,
             borrower: msg.sender,
+            lender: 0x0000000000000000000000000000000000000000,
+            timeFunded: 0,
             status: STATUS_STARTED
         });
 
@@ -51,7 +61,7 @@ contract NFTLender {
 
         loanNumber++;
 
-        ntfToken.transferFrom(msg.sender, address(this), nftTokenId);
+        nftToken.transferFrom(msg.sender, address(this), nftTokenId);
     }
 
     function fundLoan(uint256 loanId, uint256 amount) public {
@@ -63,8 +73,38 @@ contract NFTLender {
         require(amount <= (loans[loanId].price * MAX_RATIO) / 100, "The loan amount cannot exceed 70% of the NFT price");
 
         loans[loanId].amount = amount;
+        loans[loanId].lender = msg.sender;
+        loans[loanId].timeFunded = block.timestamp;
+//        loans[loanId].timeFunded = block.timestamp - 24 * 60 * 60;
         loans[loanId].status = STATUS_FUNDED;
 
         usdcToken.transferFrom(msg.sender, loans[loanId].borrower, amount);
     }
+
+    function repayLoan(uint256 loanId) public {
+        console.log("repayLoan, loanId: %d", loanId);
+        console.log("msg.sender: %s", msg.sender);
+        console.log("status: %d", loans[loanId].status);
+        console.log("now: %d", block.timestamp);
+
+        require(loans[loanId].status == STATUS_FUNDED, "The specified loan cannot be repaid");
+        require(msg.sender == loans[loanId].borrower, "This method can only be called by borrower");
+
+        uint256 duration = block.timestamp - loans[loanId].timeFunded;
+
+        console.log("duration: %d", duration);
+
+        uint256 ratePerSecond = loans[loanId].rate / 31536000;
+        uint256 accruedInterest = (loans[loanId].amount * duration * ratePerSecond) / 1000000000000000000;
+        uint256 repaymentAmount = loans[loanId].amount + accruedInterest;
+
+        console.log("repaymentAmount: %d", repaymentAmount);
+
+        loans[loanId].status = STATUS_REPAID;
+
+        ERC721 nftToken = loans[loanId].nftToken;
+
+        usdcToken.transferFrom(loans[loanId].borrower, loans[loanId].lender, repaymentAmount);
+        nftToken.transferFrom(address(this), loans[loanId].borrower, loans[loanId].nftTokenId);
+   }
 }
